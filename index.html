@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urgências de Projeto (HTML)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            max-width: 800px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input, select, button {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        .urgent-red { background-color: #ffcccc; }
+        .medium-yellow { background-color: #ffffcc; }
+        .low-green { background-color: #ccffcc; }
+        .error {
+            color: red;
+            text-align: center;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>URGÊNCIAS DE PROJETO</h1>
+        <div id="error" class="error"></div>
+        <div class="form">
+            <input type="text" id="pedido" placeholder="OS" required>
+            <input type="text" id="orcamento" placeholder="Orçamento">
+            <input type="text" id="cliente" placeholder="Cliente" required>
+            <input type="date" id="dataEntrega" required>
+            <select id="urgencyColor">
+                <option value="">Selecionar Urgência</option>
+                <option value="urgent-red">Muito Urgente</option>
+                <option value="medium-yellow">Média Urgência</option>
+                <option value="low-green">Baixa Urgência</option>
+            </select>
+            <button onclick="addProject()">Adicionar Projeto</button>
+        </div>
+        <table id="projectTable">
+            <thead>
+                <tr>
+                    <th>OS</th>
+                    <th>Orçamento</th>
+                    <th>Cliente</th>
+                    <th>Data Entrega</th>
+                    <th>Urgência</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="projectList"></tbody>
+        </table>
+    </div>
+
+<script>
+    const audio = new Audio('https://freesound.org/data/previews/316/316847_4939433-lq.mp3');
+    
+    audio.addEventListener('error', () => {
+        document.getElementById('error').textContent = 'Erro ao carregar o áudio. Verifique o URL ou use um arquivo local.';
+    });
+    audio.addEventListener('loadeddata', () => {
+        console.log('Áudio carregado com sucesso.');
+    });
+
+    let projects = [];
+
+    function addProject() {
+        const pedido = document.getElementById('pedido').value;
+        const orcamento = document.getElementById('orcamento').value;
+        const cliente = document.getElementById('cliente').value;
+        const dataEntrega = document.getElementById('dataEntrega').value;
+        const urgencyColor = document.getElementById('urgencyColor').value;
+
+        if (!pedido || !cliente || !dataEntrega) {
+            document.getElementById('error').textContent = 'Por favor, preencha OS, Cliente e Data de Entrega.';
+            return;
+        }
+
+        audio.play().then(() => {
+            console.log('Som tocado com sucesso.');
+            document.getElementById('error').textContent = '';
+        }).catch(e => {
+            console.error('Erro ao tocar som:', e);
+            document.getElementById('error').textContent = 'Erro ao tocar o som. Verifique as permissões do navegador.';
+        });
+
+        const id = Date.now().toString();
+        projects.push({ id, pedido, orcamento, cliente, dataEntrega, urgencyColor });
+        renderProjects();
+
+        document.getElementById('pedido').value = '';
+        document.getElementById('orcamento').value = '';
+        document.getElementById('cliente').value = '';
+        document.getElementById('dataEntrega').value = '';
+        document.getElementById('urgencyColor').value = '';
+    }
+
+    function deleteProject(id) {
+        projects = projects.filter(project => project.id !== id);
+        renderProjects();
+    }
+
+    function updateUrgency(id, newUrgency) {
+        const project = projects.find(project => project.id === id);
+        if (project) {
+            project.urgencyColor = newUrgency;
+            renderProjects();
+        }
+    }
+
+    function renderProjects() {
+        const projectList = document.getElementById('projectList');
+        projectList.innerHTML = '';
+        projects.forEach(project => {
+            const tr = document.createElement('tr');
+            tr.className = project.urgencyColor;
+            tr.innerHTML = `
+                <td>${project.pedido}</td>
+                <td>${project.orcamento}</td>
+                <td>${project.cliente}</td>
+                <td>${project.dataEntrega}</td>
+                <td>
+                    <select onchange="updateUrgency('${project.id}', this.value)">
+                        <option value="" ${project.urgencyColor === '' ? 'selected' : ''}>Selecionar Urgência</option>
+                        <option value="urgent-red" ${project.urgencyColor === 'urgent-red' ? 'selected' : ''}>Muito Urgente</option>
+                        <option value="medium-yellow" ${project.urgencyColor === 'medium-yellow' ? 'selected' : ''}>Média Urgência</option>
+                        <option value="low-green" ${project.urgencyColor === 'low-green' ? 'selected' : ''}>Baixa Urgência</option>
+                    </select>
+                </td>
+                <td><button onclick="deleteProject('${project.id}')">Excluir</button></td>
+            `;
+            projectList.appendChild(tr);
+        });
+    }
+</script>
+</body>
+</html>
